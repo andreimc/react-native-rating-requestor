@@ -17,7 +17,7 @@ const parsedConfig = (appName) => ({
     accept: `Rate ${appName}`
   },
   timingFunction: function (currentCount) {
-    return currentCount > 10 && (Math.log(currentCount) / Math.log(3)).toFixed(4) % 1 === 0
+    return currentCount > 5 && (Math.log(currentCount) / Math.log(3)).toFixed(4) % 1 === 0
   }
 })
 
