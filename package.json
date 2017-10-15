@@ -32,6 +32,6 @@
     "react-native": ">= 0.20.0"
   },
   "dependencies": {
-    "react-native-store-review": "github:futurimedia/react-native-store-review"
+    "react-native-store-review": "github:andreimc/react-native-store-review"
   }
 }
