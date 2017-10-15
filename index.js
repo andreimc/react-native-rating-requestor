@@ -4,25 +4,22 @@ import * as StoreReview from 'react-native-store-review'
 import RatingsData from './RatingsData'
 
 const _config = {
-  title: 'Share Your Feedback',
-  ratePrompt: 'Would you mind taking a quick moment to leave us a positive review?',
-  initialQuestion: 'Do you like this app?',
-  feedbackPrompt: 'Would you like to tell us about it?',
+}
+
+const parsedConfig = (appName) => ({
+  rateTitle: `Rate ${appName}?`,
+  ratePrompt: `We're glad you love ${appName}! Please take a moment to rate your experience.  Thank you so much!`,
   appStoreId: null,
-  feedbackLabels: {
-    yes: 'Yes',
-    no: 'No'
-  },
   actionLabels: {
-    decline: 'Don\'t ask again',
-    delay: 'Maybe later...',
-    feedback: 'Submit Feedback',
-    accept: 'Rate the App'
+    decline: 'No, Thanks',
+    delay: 'Maybe Later',
+    feedback: 'I Will',
+    accept: `Rate ${appName}`
   },
   timingFunction: function (currentCount) {
-    return currentCount > 1 && (Math.log(currentCount) / Math.log(3)).toFixed(4) % 1 === 0
+    return currentCount > 10 && (Math.log(currentCount) / Math.log(3)).toFixed(4) % 1 === 0
   }
-}
+})
 
 async function _isAwaitingRating () {
   let timestamps = await RatingsData.getActionTimestamps()
@@ -53,14 +50,14 @@ export default class RatingRequestor {
    *                   timingFunction: {func}
    *                 }
    */
-  constructor (appStoreId, options) {
+  constructor (appStoreId, appName, options) {
     // Check for required options
     if (!appStoreId) {
       throw new Error('You must specify your app\'s store ID on construction to use the Rating Requestor.')
     }
 
     // Merge defaults with user-supplied config
-    Object.assign(_config, options)
+    Object.assign(_config, parsedConfig(appName), options)
     _config.appStoreId = appStoreId
   }
 
@@ -71,17 +68,13 @@ export default class RatingRequestor {
     RatingsData.resetData()
   }
 
-  recordFeedback () {
-    RatingsData.recordFeedback()
-  }
-
   /**
    * Immediately invoke the store review
    */
   storeReview (cbFunction = () => { }) {
     let storeUrl = Platform.OS === 'ios'
-      ? 'https://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=' + _config.appStoreId + '&pageNumber=0&sortOrdering=2&type=Purple+Software&mt=8'
-      : 'market://details?id=' + _config.appStoreId
+      ? `https://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=${_config.appStoreId}&pageNumber=0&sortOrdering=2&type=Purple+Software&mt=8`
+      : `market://details?id=${_config.appStoreId}`
 
     RatingsData.recordRated()
     cbFunction(true, 'accept')
@@ -94,37 +87,14 @@ export default class RatingRequestor {
     }
   }
 
-  showFeedbackDialog (cbFunction = () => { }) {
-    Alert.alert(
-      _config.title,
-      _config.feedbackPrompt,
-      [
-        { text: _config.actionLabels.decline, onPress: () => { RatingsData.recordDecline(); cbFunction(true, 'decline') } },
-        { text: _config.actionLabels.delay, onPress: () => { cbFunction(true, 'delay') } },
-        { text: _config.actionLabels.feedback, onPress: () => { cbFunction(true, 'feedback') }, style: 'cancel' }
-      ]
-    )
-  }
-
-  showRatingDialog (cbFunction = () => { }) {
-    Alert.alert(
-      _config.title,
-      _config.ratePrompt,
-      [
-        { text: _config.actionLabels.decline, onPress: () => { RatingsData.recordDecline(); cbFunction(true, 'decline') } },
-        { text: _config.actionLabels.delay, onPress: () => { cbFunction(true, 'delay') } },
-        { text: _config.actionLabels.accept, onPress: () => this.storeReview(), style: 'cancel' }
-      ]
-    )
-  }
-
   showInitialDialog (cbFunction = () => { }) {
     Alert.alert(
-      _config.title,
-      _config.initialQuestion,
+      _config.rateTitle,
+      _config.ratePrompt,
       [
-        { text: _config.feedbackLabels.no, onPress: () => this.showFeedbackDialog(cbFunction) },
-        { text: _config.feedbackLabels.yes, onPress: () => this.showRatingDialog(cbFunction), style: 'cancel' }
+        { text: _config.actionLabels.accept, onPress: () => this.storeReview() },
+        { text: _config.actionLabels.delay, onPress: () => { cbFunction(true, 'delay') } },
+        { text: _config.actionLabels.decline, onPress: () => { RatingsData.recordDecline(); cbFunction(true, 'decline') } }
       ]
     )
   }
