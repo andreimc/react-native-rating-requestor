@@ -81,7 +81,7 @@ export default class RatingRequestor {
 	 */
 	storeReview(callback = () => {}) {
 		let storeUrl = Platform.OS === 'ios' ?
-			'http://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=' + _config.appStoreId + '&pageNumber=0&sortOrdering=2&type=Purple+Software&mt=8' :
+			'https://itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?id=' + _config.appStoreId + '&pageNumber=0&sortOrdering=2&type=Purple+Software&mt=8' :
 			'market://details?id=' + _config.appStoreId;
 
 		RatingsData.recordRated();
